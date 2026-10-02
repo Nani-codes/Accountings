@@ -42,6 +42,10 @@ jobs:
         run: pyinstaller build.spec
 
       - name: Smoke test the exe
+        env:
+          # Belt-and-suspenders: force UTF-8 so console output can't crash on
+          # the runner's default cp1252 code page.
+          PYTHONUTF8: "1"
         run: |
           .\dist\AccountingsConnector.exe --version
           .\dist\AccountingsConnector.exe --help

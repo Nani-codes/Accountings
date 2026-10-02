@@ -83,7 +83,7 @@ async def pair_connector(api_url: str) -> ConnectorConfig:
     Pair the connector with a code from the cloud API.
     
     Prompts user for:
-    - Pairing code (from Settings → Tally)
+    - Pairing code (from Settings -> Tally)
     - Tally host (default: localhost)
     - Tally port (default: 9000)
     
@@ -99,7 +99,7 @@ async def pair_connector(api_url: str) -> ConnectorConfig:
     print("\n=== TallyPrime Connector Pairing ===\n")
     
     # Get pairing code
-    code = input("Enter pairing code from Settings → Tally: ").strip()
+    code = input("Enter pairing code from Settings -> Tally: ").strip()
     if not code:
         raise ValueError("Pairing code is required")
     
@@ -125,7 +125,7 @@ async def pair_connector(api_url: str) -> ConnectorConfig:
         if confirm != "y":
             raise ValueError("Pairing cancelled")
     else:
-        print("✓ Tally is reachable")
+        print("[OK] Tally is reachable")
     
     # Call pairing endpoint
     print(f"\nPairing with {api_url}...")
@@ -153,7 +153,7 @@ async def pair_connector(api_url: str) -> ConnectorConfig:
     )
     
     save_config(config)
-    print(f"✓ Paired successfully. Device token saved to {get_config_path()}")
+    print(f"[OK] Paired successfully. Device token saved to {get_config_path()}")
     return config
 
 
@@ -184,7 +184,7 @@ async def run_connector(config: ConnectorConfig) -> None:
             subprotocols=[],
             extra_headers={"Authorization": f"Bearer {config.device_token}"},
         ) as websocket:
-            print("✓ Connected to cloud API")
+            print("[OK] Connected to cloud API")
             
             # Start heartbeat task
             heartbeat_task = asyncio.create_task(
@@ -269,7 +269,7 @@ async def _message_handler(websocket: Any, config: ConnectorConfig) -> None:
                 error_msg = msg.get("message", "Unknown error")
                 if "auth" in error_msg.lower() or "unauthorized" in error_msg.lower():
                     print(
-                        "Authentication failed. Re-pair from Settings → Tally",
+                        "Authentication failed. Re-pair from Settings -> Tally",
                         file=sys.stderr,
                     )
                     raise RuntimeError(f"Auth error: {error_msg}")
@@ -340,6 +340,15 @@ async def _handle_request(
 
 def main() -> None:
     """Main entry point for the connector CLI."""
+    # Windows consoles default to cp1252, which can't encode many characters
+    # (arrows, box-drawing, non-Latin ledger names from Tally). Force UTF-8 so
+    # printing never raises UnicodeEncodeError.
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
+        except Exception:
+            pass
+
     # Lightweight arg handling (keep stdlib-only; argparse is fine for one flag).
     if any(a in ("--version", "-V") for a in sys.argv[1:]):
         print(f"AccountingsConnector {_app_version()}")
@@ -349,7 +358,7 @@ def main() -> None:
             "Accountings Tally Connector\n\n"
             "Usage: AccountingsConnector [--version] [--help]\n\n"
             "On first run you'll be prompted for the pairing code from\n"
-            "Accountings → Settings → Tally. Set ACCOUNTINGS_API_URL to point\n"
+            "Accountings -> Settings -> Tally. Set ACCOUNTINGS_API_URL to point\n"
             "at your cloud API (default: http://127.0.0.1:8000)."
         )
         sys.exit(0)
