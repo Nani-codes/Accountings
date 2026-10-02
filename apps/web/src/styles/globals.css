@@ -25,3 +25,30 @@ body {
   color: var(--ink);
   min-height: 100%;
 }
+
+@layer components {
+  /* Top-nav links (desktop + mobile). Active state via data-active. */
+  .nav-link {
+    @apply rounded-lg px-3 py-1.5 text-sm font-medium text-ink-faint transition-colors;
+  }
+  .nav-link:hover {
+    @apply text-ink;
+  }
+  .nav-link[data-active="true"] {
+    @apply bg-void-elevated text-ink;
+  }
+
+  /* Primary content surface for standard (non-Advisor) pages. */
+  .work-sheet {
+    @apply rounded-panel border border-line bg-void-elevated;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex h-10 items-center justify-center rounded-pill bg-cta px-4 text-sm font-medium text-cta-ink transition-opacity hover:opacity-90 disabled:opacity-60;
+  }
+  .btn-secondary {
+    @apply inline-flex h-10 items-center justify-center rounded-pill border border-line bg-transparent px-4 text-sm font-medium text-ink transition-colors hover:bg-void-elevated disabled:opacity-60;
+  }
+}
+
