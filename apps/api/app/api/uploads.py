@@ -192,3 +192,30 @@ def get_run(
         period=run.period,
         status=run.status,
     )
+
+
+@router.post("/runs/{run_id}/start", response_model=RunOut)
+def start_reconciliation(
+    run_id: UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> RunOut:
+    run = (
+        db.query(ReconciliationRun)
+        .filter(
+            ReconciliationRun.id == run_id,
+            ReconciliationRun.organization_id == user.organization_id,
+        )
+        .first()
+    )
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+    from app.services.run_pipeline import start_run
+
+    started = start_run(db, run.id)
+    return RunOut(
+        id=str(started.id),
+        client_id=str(started.client_id),
+        period=started.period,
+        status=started.status,
+    )
