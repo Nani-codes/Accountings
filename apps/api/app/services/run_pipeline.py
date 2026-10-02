@@ -194,9 +194,12 @@ def start_run(
         run.status = "ai_enriching"
         db.commit()
         try:
-            enrich_findings_stub(db, run, groups)
+            from app.ai.enrich import enrich_findings_from_groups
+
+            enrich_findings_from_groups(db, run, groups)
             out.summary["ai_incomplete"] = False
         except Exception:
+            enrich_findings_stub(db, run, groups)
             out.summary["ai_incomplete"] = True
         run.summary = out.summary
         run.status = "needs_review"
