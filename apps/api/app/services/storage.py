@@ -33,19 +33,27 @@ def _local_root() -> Path:
 
 
 def _client():
+    # Empty S3_ENDPOINT => real AWS (boto3 resolves the regional endpoint).
+    # A non-empty endpoint targets an S3-compatible service.
+    endpoint = (settings.s3_endpoint or "").strip() or None
     return boto3.client(
         "s3",
-        endpoint_url=settings.s3_endpoint,
-        aws_access_key_id=settings.s3_access_key,
-        aws_secret_access_key=settings.s3_secret_key,
+        endpoint_url=endpoint,
+        aws_access_key_id=settings.s3_access_key or None,
+        aws_secret_access_key=settings.s3_secret_key or None,
         config=Config(signature_version="s3v4"),
-        region_name="us-east-1",
+        region_name=settings.s3_region or "us-east-1",
     )
 
 
 def ensure_bucket() -> None:
     if settings.storage_backend == "local":
         _local_root()
+        return
+    # Real AWS (no custom endpoint): assume the bucket already exists and that
+    # the IAM principal may not have ListAllMyBuckets/CreateBucket. Auto-create
+    # only for S3-compatible services (e.g. MinIO) where it's expected.
+    if not settings.s3_uses_custom_endpoint:
         return
     client = _client()
     buckets = [b["Name"] for b in client.list_buckets().get("Buckets", [])]

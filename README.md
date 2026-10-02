@@ -44,7 +44,7 @@ cd apps/agent-ui && cp .env.local.example .env.local && pnpm install && pnpm dev
 - Web: http://localhost:3000 (Accountings UI)
 - Agent UI (optional): http://localhost:3001
 - Postgres host port: **5433** (avoids clashes with other local Postgres)
-- MinIO: host **9010** / console **9011** (optional for local S3). For **real AWS S3**, set `STORAGE_BACKEND=s3`, leave `S3_ENDPOINT` empty, and set `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` (or `AWS_ACCESS_SECRET`) / `AWS_BUCKET_NAME` / `AWS_REGION`. Client GST uploads and run exports read/write via this storage layer; `/health` reports the active backend (no secrets).
+- Storage: **local disk** by default (`STORAGE_BACKEND=local`). For **real AWS S3**, set `STORAGE_BACKEND=s3`, leave `S3_ENDPOINT` empty, and set `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_BUCKET_NAME` / `AWS_REGION`. Client GST uploads and run exports read/write via this storage layer; `/health` reports the active backend (no secrets).
 - LLM: **Vertex AI Gemini** (`VERTEX_MODEL_ID`, default `gemini-2.5-flash`) via Agno
 - CORS: include both `:3000` (workbench) and `:3001` (optional Agent UI) in `API_CORS_ORIGINS`
 - **TallyPrime hosted connector:** The Accountings Connector runs on the firm PC and dials out to this API via WebSocket. Advisor can call `tally_*` tools to query live ledgers, day book, trial balance. Set `TALLY_TOKEN_PEPPER` for pairing security. `/health` reports `tally_connector: enabled`.
