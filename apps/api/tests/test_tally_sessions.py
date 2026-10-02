@@ -27,6 +27,12 @@ def test_register_and_get():
 async def test_rpc_resolves_response():
     org = uuid4()
     sess = LiveSession(organization_id=org)
+    
+    # Mock send_json to allow RPC to proceed
+    async def mock_send_json(msg: dict):
+        pass
+    
+    sess.send_json = mock_send_json
     register_live_session(org, sess)
 
     async def responder():

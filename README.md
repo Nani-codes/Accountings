@@ -49,6 +49,14 @@ cd apps/agent-ui && cp .env.local.example .env.local && pnpm install && pnpm dev
 - CORS: include both `:3000` (workbench) and `:3001` (optional Agent UI) in `API_CORS_ORIGINS`
 - **TallyPrime hosted connector:** The Accountings Connector runs on the firm PC and dials out to this API via WebSocket. Advisor can call `tally_*` tools to query live ledgers, day book, trial balance. Set `TALLY_TOKEN_PEPPER` for pairing security. `/health` reports `tally_connector: enabled`.
 
+## Settings → Tally connector
+
+1. **Pairing:** In the web UI, go to **Settings → Connect** and copy the pairing code.
+2. **Download connector:** Use `TALLY_CONNECTOR_DOWNLOAD_URL` to get the Windows connector executable.
+3. **Run connector:** On the firm PC, run the connector with the pairing code. It will dial out to this API via WebSocket.
+4. **Status:** Once connected, Advisor can query live Tally data (ledgers, day book, trial balance). Status shows as **Online** in Settings.
+5. **Disconnect:** Revokes the pairing code and closes the WebSocket session.
+
 ## Demo path
 
 1. Sign up at `/login`
