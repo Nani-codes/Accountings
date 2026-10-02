@@ -18,6 +18,7 @@ from app.api.dashboard import router as dashboard_router
 from app.api.exports import router as exports_router
 from app.api.findings import router as findings_router
 from app.api.middleware_org import OrgContextMiddleware
+from app.api.tally import router as tally_router
 from app.api.uploads import router as uploads_router
 from app.config import settings
 
@@ -50,6 +51,7 @@ def create_base_app() -> FastAPI:
     app.include_router(uploads_router)
     app.include_router(findings_router)
     app.include_router(exports_router)
+    app.include_router(tally_router)
 
     @app.get("/health")
     def health():
