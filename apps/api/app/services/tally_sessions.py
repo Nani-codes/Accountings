@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable
 from uuid import UUID
 
+from app.services.tally_gateway import assert_op_allowed, build_tally_xml
+
 _sessions: dict[UUID, "LiveSession"] = {}
 
 
@@ -19,13 +21,24 @@ class LiveSession:
     async def rpc(self, op: str, args: dict, timeout: float = 25.0) -> dict[str, Any]:
         if self.send_json is None:
             raise RuntimeError("connector not connected")
+        
+        # Validate operation and build XML
+        assert_op_allowed(op)
+        xml = build_tally_xml(op, args)
+        
         req_id = str(uuid.uuid4())
         loop = asyncio.get_running_loop()
         fut: asyncio.Future = loop.create_future()
         self._pending[req_id] = fut
         try:
             await self.send_json(
-                {"type": "request", "id": req_id, "op": op, "args": args or {}}
+                {
+                    "type": "request",
+                    "id": req_id,
+                    "op": op,
+                    "args": args or {},
+                    "xml": xml,
+                }
             )
             raw = await asyncio.wait_for(fut, timeout=timeout)
         finally:
