@@ -52,6 +52,7 @@ def create_base_app() -> FastAPI:
     app.include_router(findings_router)
     app.include_router(exports_router)
     app.include_router(tally_router)
+    app.include_router(tally_router)
 
     @app.get("/health")
     def health():
