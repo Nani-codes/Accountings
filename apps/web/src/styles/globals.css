@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --void: #060606;
+  --void-elevated: #0e1116;
+  --void-soft: #161b24;
+  --ash: #c8c4ba;
+  --ash-bright: #f2f0e8;
+  --ink: #ffffff;
+  --ink-muted: rgba(242, 240, 232, 0.72);
+  --ink-faint: rgba(200, 196, 186, 0.64);
+  --line: rgba(242, 240, 232, 0.12);
+  --shiva-blue: #0047ab;
+  --shiva-bright: #3b7ddd;
+  --shiva-soft: #132a52;
+  --cta: #f2f0e8;
+  --cta-ink: #060606;
+}
+
+html,
+body {
+  background: var(--void);
+  color: var(--ink);
+  min-height: 100%;
+}
