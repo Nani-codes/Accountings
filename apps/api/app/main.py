@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
+from app.api.clients import router as clients_router
+from app.api.dashboard import router as dashboard_router
 from app.config import settings
 
 
@@ -16,6 +18,8 @@ def create_base_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(auth_router)
+    app.include_router(clients_router)
+    app.include_router(dashboard_router)
 
     @app.get("/health")
     def health():
