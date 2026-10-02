@@ -2,8 +2,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql+psycopg://workbench:workbench@localhost:5432/workbench"
-    s3_endpoint: str = "http://localhost:9000"
+    database_url: str = "postgresql+psycopg://workbench:workbench@localhost:5433/workbench"
+    s3_endpoint: str = "http://localhost:9002"
     s3_access_key: str = "minio"
     s3_secret_key: str = "minio12345"
     s3_bucket: str = "workbench"
