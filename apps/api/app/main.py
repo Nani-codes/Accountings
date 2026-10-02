@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.auth import router as auth_router
 from app.api.clients import router as clients_router
 from app.api.dashboard import router as dashboard_router
+from app.api.findings import router as findings_router
 from app.api.uploads import router as uploads_router
 from app.config import settings
 
@@ -22,6 +23,7 @@ def create_base_app() -> FastAPI:
     app.include_router(clients_router)
     app.include_router(dashboard_router)
     app.include_router(uploads_router)
+    app.include_router(findings_router)
 
     @app.get("/health")
     def health():
