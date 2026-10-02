@@ -61,8 +61,10 @@ def build_agent_os(base_app: FastAPI | None = None) -> AgentOS:
 
 base_app = create_base_app()
 
-# Mount AgentOS when OpenAI key present; otherwise keep plain FastAPI for local/tests.
-if settings.openai_api_key:
+# Mount AgentOS when Vertex credentials/project are configured.
+from app.ai.agents import vertex_configured
+
+if vertex_configured():
     agent_os = build_agent_os(base_app)
     app = agent_os.get_app()
 else:

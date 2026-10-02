@@ -8,6 +8,7 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 apps/api/.venv/
+apps/api/tmp/
 apps/web/node_modules/
 apps/web/.next/
 apps/web/next-env.d.ts
@@ -15,3 +16,7 @@ apps/web/next-env.d.ts
 *.egg-info/
 dist/
 build/
+vertexai.json
+**/vertexai.json
+*-credentials.json
+service-account*.json

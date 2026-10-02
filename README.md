@@ -13,11 +13,14 @@ Monorepo for the CA firm workbench: deterministic Purchase ↔ GSTR-2B reconcili
 - Docker / Docker Compose
 - [uv](https://docs.astral.sh/uv/) (Python 3.12+)
 - Node.js 20+
+- Google Cloud project with Vertex AI API enabled + service account JSON
 
 ## Local setup
 
 ```bash
 cp .env.example .env
+# Set GOOGLE_APPLICATION_CREDENTIALS to your Vertex service-account JSON path
+# (never commit the key file)
 docker compose up -d
 cd apps/api && uv sync
 uv run alembic upgrade head
@@ -34,6 +37,7 @@ cd apps/web && cp .env.local.example .env.local && npm install && npm run dev
 - Web: http://localhost:3000
 - Postgres host port: **5433** (avoids clashes with other local Postgres)
 - MinIO: host **9010** / console **9011** (`quay.io/minio/minio`)
+- LLM: **Vertex AI Gemini** (`VERTEX_MODEL_ID`, default `gemini-2.5-flash`) via Agno
 
 ## Demo path
 
