@@ -75,3 +75,38 @@ cd apps/agent-ui && cp .env.local.example .env.local && pnpm install && pnpm dev
 ## Non-goals (v1)
 
 No billing, WhatsApp, multi-user roles, or autonomous matching agents. Live Tally is **optional** via MCP (not required for recon); recon still runs on uploaded registers.
+
+## Deploy (Coolify)
+
+Production runs as a Docker Compose stack: **Postgres + API + web** (storage is external AWS S3; the Tally connector is client-side).
+
+Files:
+- `docker-compose.prod.yml` — the stack (db, api, web)
+- `apps/api/Dockerfile` — uv-based image; runs `alembic upgrade head` then uvicorn
+- `apps/web/Dockerfile` — Next.js standalone build (`output: "standalone"`)
+
+### Steps
+
+1. In Coolify, open the **Accountings** project → add a **Docker Compose** resource from the GitHub repo (`Nani-codes/Accountings`), compose file `docker-compose.prod.yml`.
+2. Attach **two domains**: one to the `web` service (port 3000), one to the `api` service (port 8000). Coolify provisions Traefik + TLS.
+3. Set **environment variables** (below) in the Coolify UI.
+4. Deploy. Migrations run automatically on API boot; the API waits for the DB healthcheck.
+
+### Required environment variables (set in Coolify)
+
+| Var | Notes |
+|-----|-------|
+| `POSTGRES_PASSWORD` | DB password (user/db default to `workbench`) |
+| `JWT_SECRET` | strong random secret |
+| `NEXT_PUBLIC_API_URL` | `https://<api-domain>` — **build-time**, baked into the web bundle |
+| `API_CORS_ORIGINS` | `https://<web-domain>` (comma-separated if multiple) |
+| `AWS_BUCKET_NAME`, `AWS_REGION` | S3 bucket + region (e.g. `trilolabs-accountings`, `ap-south-2`) |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | S3 credentials (needs `s3:PutObject`/`s3:GetObject`) |
+| `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, `VERTEX_MODEL_ID` | Vertex AI (Gemini) |
+| `GOOGLE_APPLICATION_CREDENTIALS_JSON` | **full** service-account JSON; written to `/secrets/vertexai.json` at boot |
+| `TALLY_TOKEN_PEPPER` | pairing security |
+| `TALLY_CONNECTOR_DOWNLOAD_URL` | GitHub release `latest/download` URL for the connector exe |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | optional (Google login) |
+
+> `NEXT_PUBLIC_API_URL` is inlined into client JS at build time, so changing it requires a web rebuild/redeploy — not just a restart.
+

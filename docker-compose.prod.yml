@@ -1,0 +1,92 @@
+# Production stack for Coolify (Docker Compose build pack).
+#
+# Coolify specifics:
+# - Set this file as the compose file for the "Accountings" project resource.
+# - Domains: Coolify generates/attaches FQDNs via SERVICE_FQDN_* and routes
+#   Traefik + TLS to the labeled service/port automatically. Set the two
+#   domains in the Coolify UI (web -> app.<domain>, api -> api.<domain>).
+# - Secrets: define every ${VAR} below in the Coolify "Environment Variables"
+#   panel. Nothing secret is committed here.
+#
+# Required env (set in Coolify):
+#   POSTGRES_PASSWORD, JWT_SECRET, TALLY_TOKEN_PEPPER
+#   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME, AWS_REGION
+#   GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, VERTEX_MODEL_ID
+#   GOOGLE_APPLICATION_CREDENTIALS_JSON  (full service-account JSON)
+#   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET (optional, for Google login)
+#   NEXT_PUBLIC_API_URL  (= https://<api domain>, baked into web at build time)
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-workbench}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in Coolify}
+      POSTGRES_DB: ${POSTGRES_DB:-workbench}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-workbench} -d ${POSTGRES_DB:-workbench}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    environment:
+      # Coolify attaches the API's public domain here.
+      SERVICE_FQDN_API_8000: /
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-workbench}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-workbench}
+      JWT_SECRET: ${JWT_SECRET:?set in Coolify}
+      API_CORS_ORIGINS: ${API_CORS_ORIGINS}
+      # Storage: real AWS S3
+      STORAGE_BACKEND: s3
+      S3_ENDPOINT: ""
+      AWS_BUCKET_NAME: ${AWS_BUCKET_NAME}
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      # Vertex AI (Gemini via Agno)
+      GOOGLE_GENAI_USE_VERTEXAI: "true"
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT}
+      GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION}
+      VERTEX_MODEL_ID: ${VERTEX_MODEL_ID:-gemini-2.5-flash}
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/vertexai.json
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      # TallyPrime connector
+      TALLY_TOKEN_PEPPER: ${TALLY_TOKEN_PEPPER:?set in Coolify}
+      TALLY_CONNECTOR_DOWNLOAD_URL: ${TALLY_CONNECTOR_DOWNLOAD_URL}
+      # Write the Vertex service-account JSON from an env var at boot.
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${GOOGLE_APPLICATION_CREDENTIALS_JSON}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        if [ -n "$$GOOGLE_APPLICATION_CREDENTIALS_JSON" ]; then
+          mkdir -p /secrets
+          printf '%s' "$$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /secrets/vertexai.json
+        fi
+        exec /usr/local/bin/docker-entrypoint.sh uvicorn app.main:app --host 0.0.0.0 --port 8000
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        # Baked into the client bundle; must equal the API's public URL.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    environment:
+      SERVICE_FQDN_WEB_3000: /
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  pgdata:
