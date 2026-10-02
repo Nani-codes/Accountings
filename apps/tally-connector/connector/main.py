@@ -32,6 +32,16 @@ class ConnectorConfig(BaseModel):
     tally_port: int
 
 
+def _app_version() -> str:
+    """Best-effort connector version for --version / smoke tests."""
+    try:
+        from connector import __version__
+
+        return __version__
+    except Exception:
+        return "0.0.0"
+
+
 def get_config_path() -> Path:
     """Get the path to the connector config file."""
     home = Path.home()
@@ -330,6 +340,20 @@ async def _handle_request(
 
 def main() -> None:
     """Main entry point for the connector CLI."""
+    # Lightweight arg handling (keep stdlib-only; argparse is fine for one flag).
+    if any(a in ("--version", "-V") for a in sys.argv[1:]):
+        print(f"AccountingsConnector {_app_version()}")
+        sys.exit(0)
+    if any(a in ("--help", "-h") for a in sys.argv[1:]):
+        print(
+            "Accountings Tally Connector\n\n"
+            "Usage: AccountingsConnector [--version] [--help]\n\n"
+            "On first run you'll be prompted for the pairing code from\n"
+            "Accountings → Settings → Tally. Set ACCOUNTINGS_API_URL to point\n"
+            "at your cloud API (default: http://127.0.0.1:8000)."
+        )
+        sys.exit(0)
+
     # Get API URL from environment or use default
     api_url = os.environ.get("ACCOUNTINGS_API_URL", "http://127.0.0.1:8000")
     

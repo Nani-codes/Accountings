@@ -109,3 +109,40 @@ accountings-tally-connector
 ## Support
 
 For issues or questions, contact support@accountings.example.com
+
+## Building the Windows `.exe` (maintainers)
+
+Non-technical firms download a prebuilt single-file executable instead of
+installing Python. The exe is built with **PyInstaller on Windows** (PyInstaller
+is not a cross-compiler, so it must run on a Windows host).
+
+**Automated (recommended):** push a tag to trigger the `Connector Release`
+GitHub Action, which builds on `windows-latest` and attaches the exe to a
+GitHub Release:
+
+```bash
+git tag connector-v0.1.0
+git push origin connector-v0.1.0
+```
+
+The asset is then served at a stable URL:
+
+```
+https://github.com/<owner>/<repo>/releases/latest/download/AccountingsConnector.exe
+```
+
+Point `TALLY_CONNECTOR_DOWNLOAD_URL` at that so the app's download button works.
+
+**Manual (on a Windows machine):**
+
+```bash
+cd apps/tally-connector
+pip install -e ".[build]"
+pyinstaller build.spec
+# -> dist/AccountingsConnector.exe
+dist\AccountingsConnector.exe --version
+```
+
+> **Note on SmartScreen:** unsigned exes trigger a Windows "unknown publisher"
+> warning. To remove it, code-sign the exe with an OV/EV certificate — see the
+> commented signing step in `.github/workflows/connector-release.yml`.

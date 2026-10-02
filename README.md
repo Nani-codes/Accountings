@@ -52,7 +52,7 @@ cd apps/agent-ui && cp .env.local.example .env.local && pnpm install && pnpm dev
 ## Settings → Tally connector
 
 1. **Pairing:** In the web UI, go to **Settings → Connect** and copy the pairing code.
-2. **Download connector:** Use `TALLY_CONNECTOR_DOWNLOAD_URL` to get the Windows connector executable.
+2. **Download connector:** Set `TALLY_CONNECTOR_DOWNLOAD_URL` to the hosted Windows connector. The **Connector Release** GitHub Action (`.github/workflows/connector-release.yml`) builds `AccountingsConnector.exe` on a Windows runner and attaches it to a GitHub Release — push a tag like `connector-v0.1.0` to publish. The stable URL `https://github.com/<owner>/<repo>/releases/latest/download/AccountingsConnector.exe` always serves the newest build. Until a release exists, the UI shows "Download link coming soon".
 3. **Run connector:** On the firm PC, run the connector with the pairing code. It will dial out to this API via WebSocket.
 4. **Status:** Once connected, Advisor can query live Tally data (ledgers, day book, trial balance). Status shows as **Online** in Settings.
 5. **Disconnect:** Revokes the pairing code and closes the WebSocket session.
