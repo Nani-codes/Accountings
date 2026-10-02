@@ -36,7 +36,7 @@ cd apps/web && cp .env.local.example .env.local && npm install && npm run dev
 - API health: http://localhost:8000/health
 - Web: http://localhost:3000
 - Postgres host port: **5433** (avoids clashes with other local Postgres)
-- MinIO: host **9010** / console **9011** (`quay.io/minio/minio`)
+- MinIO: host **9010** / console **9011** (optional; default `STORAGE_BACKEND=local`)
 - LLM: **Vertex AI Gemini** (`VERTEX_MODEL_ID`, default `gemini-2.5-flash`) via Agno
 
 ## Demo path

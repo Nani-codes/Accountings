@@ -3,6 +3,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://workbench:workbench@localhost:5433/workbench"
+    storage_backend: str = "local"  # local | s3
+    local_storage_dir: str = "tmp/uploads"
     s3_endpoint: str = "http://localhost:9010"
     s3_access_key: str = "minio"
     s3_secret_key: str = "minio12345"
@@ -18,7 +20,6 @@ class Settings(BaseSettings):
     google_cloud_location: str = "us-central1"
     google_application_credentials: str = ""
     vertex_model_id: str = "gemini-2.5-flash"
-    # Legacy / unused after Vertex switch
     openai_api_key: str = ""
 
     model_config = SettingsConfigDict(

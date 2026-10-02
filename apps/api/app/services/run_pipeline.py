@@ -9,7 +9,6 @@ import pandas as pd
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.config import settings
 from app.models import (
     AiFinding,
     ClientDocument,
@@ -23,12 +22,11 @@ from app.recon.mapper import apply_mapping
 from app.recon.match import reconcile
 from app.recon.normalize import to_invoice
 from app.recon.templates import TEMPLATES
-from app.services.storage import _client
+from app.services.storage import get_object_bytes
 
 
 def _load_bytes(storage_key: str) -> bytes:
-    obj = _client().get_object(Bucket=settings.s3_bucket, Key=storage_key)
-    return obj["Body"].read()
+    return get_object_bytes(storage_key)
 
 
 def _mapping_for(db: Session, client_id: UUID, doc_type: str) -> dict[str, str]:
