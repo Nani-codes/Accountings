@@ -146,6 +146,17 @@ def patch_finding(
 
     run = db.query(ReconciliationRun).filter(ReconciliationRun.id == finding.run_id).one()
     _maybe_mark_run_reviewed(db, run)
+    from app.services.metrics import write_audit
+
+    write_audit(
+        db,
+        organization_id=user.organization_id,
+        actor_user_id=user.id,
+        action="finding_reviewed",
+        entity_type="ai_finding",
+        entity_id=finding.id,
+        payload={"status": finding.status},
+    )
     db.commit()
     db.refresh(finding)
     return _finding_out(finding)

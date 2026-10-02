@@ -20,19 +20,34 @@ Monorepo for the CA firm workbench: deterministic Purchase ↔ GSTR-2B reconcili
 cp .env.example .env
 docker compose up -d
 cd apps/api && uv sync
+uv run alembic upgrade head
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
 In another terminal:
 
 ```bash
-cd apps/web && npm install && npm run dev
+cd apps/web && cp .env.local.example .env.local && npm install && npm run dev
 ```
 
 - API health: http://localhost:8000/health
 - Web: http://localhost:3000
-- MinIO console: http://localhost:9001 (minio / minio12345)
+- Postgres host port: **5433** (avoids clashes with other local Postgres)
+- MinIO: host **9010** / console **9011** (`quay.io/minio/minio`)
 
-## Design system
+## Demo path
 
-UI tokens follow Trilolabs Tripundra Clarity (void / ash / Shiva blue, Manrope). See product `DESIGN.md` at repo root when present.
+1. Sign up at `/login`
+2. Create a client
+3. Upload Purchase + GSTR-2B (CSV from `fixtures/recon/tiny_pair`)
+4. Review findings → accept → generate client request → export Excel/PDF
+
+## What we measure in pilot
+
+- Finding accept+edit rate (trust)
+- Runs / firm / month
+- Time-to-reviewed (qualitative in week 4)
+
+## Non-goals (v1)
+
+No billing, WhatsApp, Tally, multi-user roles, or autonomous matching agents.
