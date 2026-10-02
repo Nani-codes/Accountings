@@ -59,11 +59,13 @@ agno needs a plain URL (verify at implementation; fall back to passing the full
 SQLAlchemy URL if accepted).
 
 ### Fix 4 — Custom `/health`
-AgentOS registers its own `/health` on the shared app, overriding ours. README
-documents `/health` as reporting storage + tally_connector, so we keep that
-contract. **Decision:** after `app = agent_os.get_app()`, re-register the product
-`/health` route on the final `app` so it wins. Extract the health handler into a
-helper and attach it to whichever app object is returned (base or AgentOS).
+AgentOS owns route-conflict resolution via its `on_route_conflict` setting
+(default `"preserve_agentos"`, which strips our route and installs its own).
+**Decision:** pass `on_route_conflict="preserve_base_app"` to `AgentOS(...)` so
+our `/health` (defined in `create_base_app`, reporting storage + tally_connector)
+is preserved. This also surfaced a latent bug: `/health` imported a nonexistent
+`storage_info` from `app.services.storage` (dormant while AgentOS shadowed the
+route). Add a non-secret `storage_info()` returning the active backend.
 
 ### Fix 5 — Duplicate op-id
 Originates in agno's components router (`get_config` vs `get_config_version`).

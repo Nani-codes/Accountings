@@ -8,6 +8,21 @@ from botocore.client import Config
 from app.config import settings
 
 
+def storage_info() -> dict[str, str | bool]:
+    """Non-secret summary of the active storage backend for /health."""
+    backend = settings.storage_backend
+    info: dict[str, str | bool] = {"backend": backend}
+    if backend == "s3":
+        info["bucket"] = settings.s3_bucket
+        info["region"] = settings.s3_region
+        # True when using a custom S3-compatible endpoint (e.g. MinIO); False for AWS.
+        info["custom_endpoint"] = bool((settings.s3_endpoint or "").strip())
+    else:
+        info["dir"] = settings.local_storage_dir
+    return info
+
+
+
 def _local_root() -> Path:
     root = Path(settings.local_storage_dir)
     if not root.is_absolute():

@@ -12,6 +12,7 @@ apps/api/tmp/
 apps/web/node_modules/
 apps/web/.next/
 apps/web/next-env.d.ts
+apps/web/tsconfig.tsbuildinfo
 .DS_Store
 *.egg-info/
 dist/

@@ -1,9 +1,20 @@
 from __future__ import annotations
 
-from agno.db.sqlite import SqliteDb
+import warnings
+
+from agno.db.postgres import PostgresDb
 from agno.os import AgentOS
 from agno.tools.websearch import WebSearchTools
 from fastapi import FastAPI
+
+# agno's components router registers two operations that resolve to the same
+# OpenAPI operationId (get_config / get_config_version), which emits a noisy
+# UserWarning at schema-build time. It is cosmetic; silence just this one.
+warnings.filterwarnings(
+    "ignore",
+    message="Duplicate Operation ID get_config.*",
+    category=UserWarning,
+)
 
 from app.ai.agents import (
     build_ca_advisor_agent,
@@ -33,6 +44,21 @@ def _cors_origins() -> list[str]:
     return [o.strip() for o in settings.api_cors_origins.split(",") if o.strip()]
 
 
+def _register_health(app: FastAPI) -> None:
+    """Attach the product health route. Re-applied to the final app so it wins
+    over AgentOS's own /health (which would otherwise override ours)."""
+
+    @app.get("/health")
+    def health():
+        from app.services.storage import storage_info
+
+        return {
+            "status": "ok",
+            "storage": storage_info(),
+            "tally_connector": "enabled",
+        }
+
+
 def create_base_app() -> FastAPI:
     app = FastAPI(title="Accountings API")
     origins = _cors_origins()
@@ -54,21 +80,15 @@ def create_base_app() -> FastAPI:
     app.include_router(exports_router)
     app.include_router(tally_router)
 
-    @app.get("/health")
-    def health():
-        from app.services.storage import storage_info
-
-        return {
-            "status": "ok",
-            "storage": storage_info(),
-            "tally_connector": "enabled",
-        }
+    _register_health(app)
 
     return app
 
 
 def build_agent_os(base_app: FastAPI | None = None) -> AgentOS:
-    db = SqliteDb(id=AGENT_OS_DB_ID, db_file="tmp/agent_os.db")
+    from app.db import engine
+
+    db = PostgresDb(id=AGENT_OS_DB_ID, db_engine=engine)
     # Workbench tools + Tally tools + web search as function tools. Do not use Gemini
     # search=True — it disables all external tools.
     advisor_tools: list = [
@@ -88,6 +108,9 @@ def build_agent_os(base_app: FastAPI | None = None) -> AgentOS:
         db=db,
         base_app=base_app or create_base_app(),
         cors_allowed_origins=_cors_origins() or None,
+        # Keep our product routes (notably /health reporting storage + tally)
+        # instead of letting AgentOS override them.
+        on_route_conflict="preserve_base_app",
     )
 
 
