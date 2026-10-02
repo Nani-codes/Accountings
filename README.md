@@ -1,6 +1,6 @@
-# GST Workbench (AI GST Reconciliation MVP)
+# Accountings
 
-Monorepo for the CA firm workbench: deterministic Purchase ↔ GSTR-2B reconciliation, Agno explanations on AgentOS, and a thin Next.js UI.
+Monorepo for **Accountings** ([accountings.in](https://accountings.in)) — a [Trilolabs](https://www.trilolabs.com) product: deterministic Purchase ↔ GSTR-2B reconciliation, Agno explanations on AgentOS, and a thin Next.js UI.
 
 ## Structure
 
@@ -33,11 +33,21 @@ In another terminal:
 cd apps/web && cp .env.local.example .env.local && npm install && npm run dev
 ```
 
+Agent UI (optional Agno control-plane chat on `:3001`; workbench **Advisor** is first-party):
+
+```bash
+cd apps/agent-ui && cp .env.local.example .env.local && pnpm install && pnpm dev
+```
+
 - API health: http://localhost:8000/health
-- Web: http://localhost:3000
+- AgentOS config: http://localhost:8000/config
+- Web: http://localhost:3000 (Accountings UI)
+- Agent UI (optional): http://localhost:3001
 - Postgres host port: **5433** (avoids clashes with other local Postgres)
-- MinIO: host **9010** / console **9011** (optional; default `STORAGE_BACKEND=local`)
+- MinIO: host **9010** / console **9011** (optional for local S3). For **real AWS S3**, set `STORAGE_BACKEND=s3`, leave `S3_ENDPOINT` empty, and set `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` (or `AWS_ACCESS_SECRET`) / `AWS_BUCKET_NAME` / `AWS_REGION`. Client GST uploads and run exports read/write via this storage layer; `/health` reports the active backend (no secrets).
 - LLM: **Vertex AI Gemini** (`VERTEX_MODEL_ID`, default `gemini-2.5-flash`) via Agno
+- CORS: include both `:3000` (workbench) and `:3001` (optional Agent UI) in `API_CORS_ORIGINS`
+- **TallyPrime hosted connector:** The Accountings Connector runs on the firm PC and dials out to this API via WebSocket. Advisor can call `tally_*` tools to query live ledgers, day book, trial balance. Set `TALLY_TOKEN_PEPPER` for pairing security. `/health` reports `tally_connector: enabled`.
 
 ## Demo path
 
@@ -45,6 +55,8 @@ cd apps/web && cp .env.local.example .env.local && npm install && npm run dev
 2. Create a client
 3. Upload Purchase + GSTR-2B (CSV from `fixtures/recon/tiny_pair`)
 4. Review findings → accept → generate client request → export Excel/PDF
+5. Open **Advisor** (`/assistant`) — uses AgentOS `/agents/ca-advisor/runs` + `/sessions` for history
+6. (Optional) With Accountings Connector running on the firm PC, ask Advisor for ledger / day-book lookups from the connected company
 
 ## What we measure in pilot
 
@@ -54,4 +66,4 @@ cd apps/web && cp .env.local.example .env.local && npm install && npm run dev
 
 ## Non-goals (v1)
 
-No billing, WhatsApp, Tally, multi-user roles, or autonomous matching agents.
+No billing, WhatsApp, multi-user roles, or autonomous matching agents. Live Tally is **optional** via MCP (not required for recon); recon still runs on uploaded registers.

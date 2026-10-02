@@ -12,6 +12,7 @@ from app.ai.agents import (
     build_working_paper_agent,
 )
 from app.ai.chat_tools import WorkbenchTools
+from app.ai.tally_tools import TallyTools
 from app.api.auth import router as auth_router
 from app.api.clients import router as clients_router
 from app.api.dashboard import router as dashboard_router
@@ -69,11 +70,12 @@ def create_base_app() -> FastAPI:
 
 def build_agent_os(base_app: FastAPI | None = None) -> AgentOS:
     db = SqliteDb(id=AGENT_OS_DB_ID, db_file="tmp/agent_os.db")
-    # Workbench tools + web search as function tools. Do not use Gemini
+    # Workbench tools + Tally tools + web search as function tools. Do not use Gemini
     # search=True — it disables all external tools.
     advisor_tools: list = [
         WorkbenchTools(),
         WebSearchTools(enable_news=False, fixed_max_results=5),
+        TallyTools(),
     ]
     return AgentOS(
         id="gst-workbench-os",
